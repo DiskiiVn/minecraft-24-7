@@ -1,8 +1,4 @@
-# .github/workflows/minecraft-server-cloudflare.yml
-# Máy chủ Minecraft 24/7 với Cloudflare Tunnel - Địa chỉ cố định: mc.anbuoitoikhong.fun:25565
-# Token đã cập nhật mới
-
-name: Máy chủ Minecraft Cloudflare Tunnel
+name: Máy chủ Minecraft Serveo IPv4
 
 on:
   push:
@@ -33,21 +29,19 @@ jobs:
           wget -O server.jar https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar
           echo "eula=true" > eula.txt
 
-      - name: Cài đặt cloudflared
-        run: |
-          wget -O cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-          chmod +x cloudflared
-
-      - name: Chạy máy chủ và Cloudflare Tunnel
+      - name: Chạy máy chủ và Serveo tunnel
         run: |
           cd $SERVER_DIR
           java -Xmx2G -jar server.jar nogui &
           MC_PID=$!
-          sleep 15
-          ../cloudflared tunnel --no-autoupdate run --token eyJhIjoiZGY4YmMyZDZhZTAyZGQ1OTA1MThhMzJmNGJkMGZhOTQiLCJ0IjoiYzNlMzIzZjEtNTk4NC00Mjg2LWEzZDAtODU5ZDU5M2FmNjEwIiwicyI6IlpESTVNRE0yTURRdFkyTm1NQzAwT1dWaUxXRXlNV1l0Tmprd05qTXdNVGhtTVRGaSJ9 &
-          CLOUD_PID=$!
-          echo "Máy chủ Minecraft đang chạy 24/7"
-          echo "Địa chỉ cố định: mc.anbuoitoikhong.fun:25565"
+          sleep 20
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R anbuoitoikhong:25565:localhost:25565 serveo.net &
+          SSH_PID=$!
+          sleep 5
+          echo "=============================================="
+          echo "Địa chỉ máy chủ: anbuoitoikhong.serveo.net:25565"
+          echo "Địa chỉ cố định, không thay đổi."
+          echo "=============================================="
           wait $MC_PID
         continue-on-error: true
 
@@ -60,6 +54,6 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'minecraft-server-cloudflare.yml',
+              workflow_id: 'minecraft-server-serveo.yml',
               ref: context.ref
             });

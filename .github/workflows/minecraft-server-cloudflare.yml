@@ -1,5 +1,5 @@
 # .github/workflows/minecraft-server-cloudflare.yml
-# Máy chủ Minecraft 24/7 với Cloudflare Tunnel - IPv4 cố định qua tên miền
+# Máy chủ Minecraft 24/7 với Cloudflare Tunnel - Địa chỉ cố định: mc.anbuoitoikhong.fun:25565
 
 name: Máy chủ Minecraft Cloudflare Tunnel
 
@@ -45,9 +45,8 @@ jobs:
           sleep 15
           ../cloudflared tunnel --no-autoupdate run --token eyJhIjoiZGY4YmMyZDZhZTAyZGQ1OTA1MThhMzJmNGJkMGZhOTQiLCJ0IjoiYzU1NTc4ODgtNGUwNi00YmNiLTg0MzUtZTlhMDIxODA1M2ViIiwicyI6Ik5qQmpaRFkzTm1VdE16RTJZaTAwWWpneUxXSmpaR1F0Wm1ZeU56WTFPRGsxTkRoaiJ9 &
           CLOUD_PID=$!
-          echo "Máy chủ Minecraft đang chạy"
-          echo "Địa chỉ: mc.TEN-MIEN-CUA-BAN:25565"
-          echo "Địa chỉ cố định, không thay đổi."
+          echo "Máy chủ Minecraft đang chạy 24/7"
+          echo "Địa chỉ cố định: mc.anbuoitoikhong.fun:25565"
           wait $MC_PID
         continue-on-error: true
 

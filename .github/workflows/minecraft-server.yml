@@ -1,0 +1,70 @@
+# .github/workflows/minecraft-server.yml
+# Sửa lỗi: tất cả khóa YAML phải bằng tiếng Anh. Các dòng echo có thể tiếng Việt.
+
+name: Máy chủ Minecraft 24/7
+
+on:
+  push:
+    branches: [ chính ]
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  may_chu:
+    runs-on: ubuntu-latest
+    env:
+      SERVER_DIR: ${{ github.workspace }}/may_chu
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Thiết lập Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Tải máy chủ Minecraft
+        run: |
+          mkdir -p $SERVER_DIR
+          cd $SERVER_DIR
+          wget -O server.jar https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar
+          echo "eula=true" > eula.txt
+
+      - name: Cài đặt và xác thực ngrok
+        run: |
+          wget -O ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+          unzip ngrok.zip
+          ./ngrok authtoken 3GmLw9MWOtrrQABpCzXggCfu4TN_rk4biv3xeMdZyR8LTXHg
+
+      - name: Chạy máy chủ và tạo đường hầm ngrok
+        run: |
+          cd $SERVER_DIR
+          java -Xmx2G -jar server.jar nogui &
+          MC_PID=$!
+          sleep 15
+          ../ngrok tcp 25565 --log=stdout > ../ngrok.log 2>&1 &
+          NGROK_PID=$!
+          sleep 5
+          PUBLIC_URL=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo "SERVER_ADDRESS=$PUBLIC_URL" >> $GITHUB_ENV
+          echo "Địa chỉ kết nối: $PUBLIC_URL"
+          wait $MC_PID
+        continue-on-error: true
+
+      - name: Hiển thị địa chỉ
+        run: echo "Máy chủ đang chạy tại ${{ env.SERVER_ADDRESS }}"
+
+      - name: Tự động khởi động lại để duy trì 24/7
+        if: success() || failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'minecraft-server.yml',
+              ref: context.ref
+            });
